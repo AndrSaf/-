@@ -1,0 +1,303 @@
+#include <stdio.h>
+#include <stddef.h>
+
+void print_matrix(
+    size_t rows,
+    size_t cols,
+    const int matrix[rows][cols]
+)
+{
+    for (size_t i = 0; i < rows; i++)
+    {
+        const int *row = *(matrix + i);
+
+        for (size_t j = 0; j < cols; j++)
+        {
+            printf("%d", *(row + j));
+
+            if (j + 1 < cols)
+            {
+                printf(" ");
+            }
+        }
+
+        printf("\n");
+    }
+}
+
+const int *find_matrix_max(
+    size_t rows,
+    size_t cols,
+    const int matrix[rows][cols],
+    size_t *max_row,
+    size_t *max_col
+)
+{
+    const int *max_ptr = *(matrix);
+    *max_row = 0;
+    *max_col = 0;
+
+    for (size_t i = 0; i < rows; i++)
+    {
+        const int *row = *(matrix + i);
+        const int *p = row;
+
+        for (size_t j = 0; j < cols; j++)
+        {
+            if (*p > *max_ptr)
+            {
+                max_ptr = p;
+                *max_row = i;
+                *max_col = (size_t)(p - row);
+            }
+
+            p++;
+        }
+    }
+
+    return max_ptr;
+}
+
+double matrix_average(
+    size_t rows,
+    size_t cols,
+    const int matrix[rows][cols]
+)
+{
+    long long sum = 0;
+
+    for (size_t i = 0; i < rows; i++)
+    {
+        const int *row = *(matrix + i);
+        const int *p = row;
+
+        for (size_t j = 0; j < cols; j++)
+        {
+            sum += *p;
+            p++;
+        }
+    }
+
+    return (double)sum / ((double)rows * (double)cols);
+}
+
+size_t count_above_average(
+    size_t rows,
+    size_t cols,
+    const int matrix[rows][cols],
+    double average
+)
+{
+    size_t count = 0;
+
+    for (size_t i = 0; i < rows; i++)
+    {
+        const int *row = *(matrix + i);
+        const int *p = row;
+
+        for (size_t j = 0; j < cols; j++)
+        {
+            if ((double)*p > average)
+            {
+                count++;
+            }
+
+            p++;
+        }
+    }
+
+    return count;
+}
+
+double row_average(size_t cols, const int *row)
+{
+    const int *p = row;
+    long long sum = 0;
+
+    for (size_t i = 0; i < cols; i++)
+    {
+        sum += *p;
+        p++;
+    }
+
+    return (double)sum / (double)cols;
+}
+
+size_t hottest_row(
+    size_t rows,
+    size_t cols,
+    const int matrix[rows][cols]
+)
+{
+    size_t best_row = 0;
+    double best_average = row_average(cols, *(matrix));
+
+    for (size_t i = 1; i < rows; i++)
+    {
+        const int *row = *(matrix + i);
+        double average = row_average(cols, row);
+
+        if (average > best_average)
+        {
+            best_average = average;
+            best_row = i;
+        }
+    }
+
+    return best_row;
+}
+
+void fill_row_with_average(size_t cols, int *row)
+{
+    double average = row_average(cols, row);
+    int value = (int)average;
+
+    int *p = row;
+
+    for (size_t i = 0; i < cols; i++)
+    {
+        *p = value;
+        p++;
+    }
+}
+
+int max_neighbor_difference(
+    size_t rows,
+    size_t cols,
+    const int matrix[rows][cols]
+)
+{
+    int max_difference = 0;
+
+    for (size_t i = 0; i < rows; i++)
+    {
+        const int *row = *(matrix + i);
+        const int *p = row;
+
+        for (size_t j = 1; j < cols; j++)
+        {
+            int difference = *p - *(p - 1);
+
+            if (difference < 0)
+            {
+                difference = -difference;
+            }
+
+            if (difference > max_difference)
+            {
+                max_difference = difference;
+            }
+
+            p++;
+        }
+    }
+
+    return max_difference;
+}
+
+int main(void)
+{
+    size_t rows;
+    size_t cols;
+
+    printf("Введите количество строк и столбцов: ");
+
+    if (scanf("%zu %zu", &rows, &cols) != 2)
+    {
+        printf("Ошибка ввода.\n");
+        return 1;
+    }
+
+    if (rows < 2 || rows > 50 ||
+        cols < 2 || cols > 50)
+    {
+        printf("Размеры должны быть от 2 до 50.\n");
+        return 1;
+    }
+
+    int matrix[rows][cols];
+
+    printf("Введите элементы температурной карты:\n");
+
+    for (size_t i = 0; i < rows; i++)
+    {
+        for (size_t j = 0; j < cols; j++)
+        {
+            if (scanf("%d", &matrix[i][j]) != 1)
+            {
+                printf("Ошибка ввода.\n");
+                return 1;
+            }
+        }
+    }
+
+    size_t max_row;
+    size_t max_col;
+
+    const int *max_ptr = find_matrix_max(
+        rows,
+        cols,
+        matrix,
+        &max_row,
+        &max_col
+    );
+
+    double average = matrix_average(
+        rows,
+        cols,
+        matrix
+    );
+
+    size_t above_average = count_above_average(
+        rows,
+        cols,
+        matrix,
+        average
+    );
+
+    size_t hot_row = hottest_row(
+        rows,
+        cols,
+        matrix
+    );
+
+    double hot_row_average =
+        row_average(cols, *(matrix + hot_row));
+
+    printf("\nИсходная карта:\n");
+    print_matrix(rows, cols, matrix);
+
+    printf("Максимальная температура: %d\n", *max_ptr);
+    printf("Строка: %zu\n", max_row);
+    printf("Столбец: %zu\n", max_col);
+
+    printf("Средняя температура карты: %.2f\n", average);
+
+    printf("Количество значений выше среднего: %zu\n",
+           above_average);
+
+    printf("Строка с максимальным средним: %zu\n",
+           hot_row);
+
+    printf("Среднее выбранной строки: %.2f\n",
+           hot_row_average);
+
+    fill_row_with_average(
+        cols,
+        *(matrix + hot_row)
+    );
+
+    printf("Карта после замены выбранной строки:\n");
+    print_matrix(rows, cols, matrix);
+
+    int max_difference = max_neighbor_difference(
+        rows,
+        cols,
+        matrix
+    );
+
+    printf("Максимальная разница соседних температур: %d\n",
+           max_difference);
+
+    return 0;
+}

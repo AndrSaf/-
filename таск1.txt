@@ -1,0 +1,236 @@
+#include <stdio.h>
+#include <stddef.h>
+
+int *find_min(int *begin, int *end)
+{
+    int *min = begin;
+    int *p = begin;
+
+    while (p < end)
+    {
+        if (*p < *min)
+        {
+            min = p;
+        }
+
+        p++;
+    }
+
+    return min;
+}
+
+int *find_max(int *begin, int *end)
+{
+    int *max = begin;
+    int *p = begin;
+
+    while (p < end)
+    {
+        if (*p > *max)
+        {
+            max = p;
+        }
+
+        p++;
+    }
+
+    return max;
+}
+
+long long sum_between(const int *first, const int *second)
+{
+    const int *left;
+    const int *right;
+    const int *p;
+    long long sum = 0;
+
+    if (first < second)
+    {
+        left = first;
+        right = second;
+    }
+    else
+    {
+        left = second;
+        right = first;
+    }
+
+    p = left + 1;
+
+    while (p < right)
+    {
+        sum += *p;
+        p++;
+    }
+
+    return sum;
+}
+
+size_t find_longest_increasing(
+    int *begin,
+    int *end,
+    int **sequence_begin
+)
+{
+    int *current_begin = begin;
+    int *best_begin = begin;
+    int *p = begin + 1;
+    size_t current_length = 1;
+    size_t best_length = 1;
+
+    while (p < end)
+    {
+        if (*p > *(p - 1))
+        {
+            current_length++;
+        }
+        else
+        {
+            if (current_length > best_length)
+            {
+                best_length = current_length;
+                best_begin = current_begin;
+            }
+
+            current_begin = p;
+            current_length = 1;
+        }
+
+        p++;
+    }
+
+    if (current_length > best_length)
+    {
+        best_length = current_length;
+        best_begin = current_begin;
+    }
+
+    *sequence_begin = best_begin;
+
+    return best_length;
+}
+
+void reverse_range(int *begin, int *end)
+{
+    int *left = begin;
+    int *right = end - 1;
+
+    while (left < right)
+    {
+        int temp = *left;
+        *left = *right;
+        *right = temp;
+
+        left++;
+        right--;
+    }
+}
+
+void print_array(const int *begin, const int *end)
+{
+    const int *p = begin;
+
+    while (p < end)
+    {
+        printf("%d", *p);
+
+        if (p + 1 < end)
+        {
+            printf(" ");
+        }
+
+        p++;
+    }
+
+    printf("\n");
+}
+
+int main(void)
+{
+    size_t n;
+
+    printf("Введите количество элементов: ");
+
+    if (scanf("%zu", &n) != 1)
+    {
+        printf("Ошибка ввода.\n");
+        return 1;
+    }
+
+    if (n < 2 || n > 1000)
+    {
+        printf("Количество элементов должно быть от 2 до 1000.\n");
+        return 1;
+    }
+
+    int array[n];
+
+    printf("Введите %zu целых чисел:\n", n);
+
+    for (size_t i = 0; i < n; i++)
+    {
+        if (scanf("%d", &array[i]) != 1)
+        {
+            printf("Ошибка ввода.\n");
+            return 1;
+        }
+    }
+
+    int *begin = array;
+    int *end = array + n;
+
+    int *min_ptr = find_min(begin, end);
+    int *max_ptr = find_max(begin, end);
+
+    size_t min_position = (size_t)(min_ptr - begin);
+    size_t max_position = (size_t)(max_ptr - begin);
+
+    size_t distance;
+
+    if (min_ptr < max_ptr)
+    {
+        distance = (size_t)(max_ptr - min_ptr);
+    }
+    else
+    {
+        distance = (size_t)(min_ptr - max_ptr);
+    }
+
+    long long between_sum = sum_between(min_ptr, max_ptr);
+
+    int *sequence_begin;
+    size_t sequence_length =
+        find_longest_increasing(begin, end, &sequence_begin);
+
+    printf("\nИсходный массив:\n");
+    print_array(begin, end);
+
+    printf("Минимум: %d\n", *min_ptr);
+    printf("Позиция минимума: %zu\n", min_position);
+
+    printf("Максимум: %d\n", *max_ptr);
+    printf("Позиция максимума: %zu\n", max_position);
+
+    printf("Расстояние между минимумом и максимумом: %zu\n", distance);
+
+    printf("Сумма элементов между минимумом и максимумом: %lld\n",
+           between_sum);
+
+    printf("Самый длинный возрастающий участок:\n");
+    print_array(
+        sequence_begin,
+        sequence_begin + sequence_length
+    );
+
+    printf("Длина: %zu\n", sequence_length);
+
+    reverse_range(
+        sequence_begin,
+        sequence_begin + sequence_length
+    );
+
+    printf("Массив после разворота выбранного участка:\n");
+    print_array(begin, end);
+
+    return 0;
+}
